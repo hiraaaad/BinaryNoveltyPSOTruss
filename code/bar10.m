@@ -365,10 +365,7 @@ while iter<maxiter && stopping == false % main optimization loop starts here
  end
 
 end %run completed
-% write final results
-% csvwrite(filename2,keep_history); % write history of optimization
-% dlmwrite(filename3,best_feas_design','precision',12); % write the best detected feasible solution
-% plot the best detected feasible design
+
 bestX=best_feas_design(1:D*N_node);
 bestA=best_feas_design(D*N_node+(1:N_member));
 bestM=best_feas_design(D*N_node+N_member+(1:N_member));
