@@ -1,7 +1,4 @@
 function [best_feas_design,final_eval,total_eval] = bar52(M_upper)
-% This file optimizes the 52-bar truss problem.
-% clc
-% clear
 %
 kk = 1;
 D=2; %plannar or spatial
@@ -27,7 +24,6 @@ opt.TerminateResizeNoChange=1;
 opt.ratiosUnsucc(1:3)=[1 1 0];
 opt.TruncatedCompensation=0;
 opt.iniSMEAN=.25;
- % opt.applyDisConst=1;
 opt.updateSTR=[2 2 1];
 opt.resizeStrategy=2;
 opt.GiveTimePcoeff=1;
@@ -36,10 +32,10 @@ opt.UpdateLambda=0;
 opt.UpdateTau=[0 0];
 opt.updateZ=1;
 opt.Tscoeff=1;
-opt.maxeval_coeff=200;%200/opt.lambda_coeff;
+opt.maxeval_coeff=200;
 opt.tavan=2;
 opt.topology_efficiency_check=0;
-opt.WriteInterval=120; % writing interval in seconds
+opt.WriteInterval=120; 
 opt.inconly=0;
 opt.feastol=1e-7;
 opt.c_sec_red=.05;
@@ -110,22 +106,8 @@ else
 end
 minPcoeff=1;  % minimum value of penalty coefficients
 infeas_ratio=opt.max_infeas*ones(1,N_member); % maximum fraction of members that may violate a constraint
-% filename2=['bar' num2str(N_member) '_hist' num2str(kk) '.csv']; % output file for the history of optimization process
-% filename3=['bar' num2str(N_member) '_fin' num2str(kk) '.csv']; % output file for the best detected feasible solution
-% filename4=['bar' num2str(N_member) '_bestfeas' num2str(kk) '.csv']; % output file for the best detected feasible solution
-% 
-% % datafile=['ResumeData' num2str(kk) '.mat'];
-% 
-% datafile=['ResumeData' num2str(5000) '.mat'];
-
-% if exist(datafile)
-%     load(datafile);
-% else
     Xmean=(D_X+U_X)/2;
     Xmean(X_const_ind)=X_const_val;
-%     Mmean=opt.initial_M*ones(1,N_member); 
-%     Mmean=opt.initial_M*ones(1,N_member); % topology
-
         %%% UPPER LEVEL %%%%
     if strcmp(opt.ProblemName,'39barDiscrete')
         Mmean = M_upper;
@@ -175,12 +157,7 @@ javab(1,:)=nindep;
 for k=nindep
     p=setdiff(zind,k)
     for m=p
-      % [ Xmean(3*k-2)==(Xmean(3*m-2)) k  Xmean(3*k-1)  (31-Xmean(3*m-1))]
         if (Xmean(3*k-2)==(Xmean(3*m-2)) & Xmean(3*k-1)==(31-Xmean(3*m-1)))  |   (Xmean(3*k-2)==(38-Xmean(3*m-2)) & Xmean(3*k-1)==(31-Xmean(3*m-1)))  |   (Xmean(3*k-2)==(38-Xmean(3*m-2)) & Xmean(3*k-1)==(Xmean(3*m-1)))
-            
-            
-            
-            
             ind=find(javab(1,:)==k);
             bood=sum(javab(:,ind)>0);
             javab(bood+1,ind)=m;
@@ -333,20 +310,16 @@ while counteval<maxeval && stopping == false % main optimization loop starts her
                 ABORT
             end
             counteval=counteval+1; 
-           %  assign the highest constraint violation to all the coupled variables
            if opt.FSDBasedPenalty==1
                 slender_ratio(sym_A)= repmat(max(slender_ratio(sym_A)),size(sym_A,1),1);
                 stress_ratio(sym_A)= repmat(max(stress_ratio(sym_A)),size(sym_A,1),1);
-                %  Estimate the required increase in the cross sections such that all constraints are satisfied
                 slender_ratio = zeros(1,N_member); % No buckling
                 Agoal0=A;
                 Rigoal0=Ri;
                 if strcmp(opt.specification,'AISC-ASD')
                     f_int_ext_increased=f_int_ext;%f_int_ext.*repmat(max(1,stress_ratio.^(opt.tavanAgoal+Pcoeff.^opt.TavanApplyPcoeffInAgoal-1)),N_loadcase,1)';
                  
-                    Agoal2= find_Agoal_ASD(Length_M,f_int_ext_increased,M,Agoal0,Rigoal0,Fy,M_elasticity,section_no,sym_A,Avar_ind,opt); % individual section area increase for satisfaction of member-based constraints 
-                   % Agoal2=find_Agoal_ASD2(Length_M,f_int_ext_increased,M,Agoal0,Rigoal0,Fy,M_elasticity,section_no,sym_A,Avar_ind,max([slender_ratio;stress_ratio]),opt); % individual section area increase for satisfaction of member-based constraints 
-                 
+                    Agoal2= find_Agoal_ASD(Length_M,f_int_ext_increased,M,Agoal0,Rigoal0,Fy,M_elasticity,section_no,sym_A,Avar_ind,opt); % individual section area increase for satisfaction of member-based constraints                  
                 
                 elseif strcmp(opt.specification,'simplified')
                     Agoal2=Agoal0.*max(1,max([stress_ratio;slender_ratio])); % Agoal2>=Agoal0    
@@ -389,7 +362,6 @@ while counteval<maxeval && stopping == false % main optimization loop starts her
                     suggMax_Avar(k)=suggMax_Avar(k)^(1+Ts);
                 end
                 suggMax_Avar(k)=max(min(Max_Max_Avar,suggMax_Avar(k)),Min_Max_Avar); % make sure the move limit ratio remains within the predefined range  
-                %[k resized_iter oldf(k) f(k) max(constraint_vio(k,:)) suggMax_Avar(k)]
             end
             if (opt.inconly==0) | (resized_iter==1)
                  if strcmp(opt.specification,'AISC-ASD')  
@@ -701,6 +673,4 @@ bestM=best_feas_design(D*N_node+N_member+(1:N_member));
 bestNAP=find_NAP(GSCP,bestM);
 final_eval = stopping_evals(1);
 total_eval = counteval;
-% plot_truss(GSCP,bestX,bestNAP,bestM,bestA,D);
-
 end

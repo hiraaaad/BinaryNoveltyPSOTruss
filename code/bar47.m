@@ -246,7 +246,6 @@ while iter<maxiter % main optimization loop starts here
             end
         end % The k-th solution that satisfies the necessary conditions for stability is generated
          
-        
         %%% UPPER LEVEL %%%%
             M = zeros(1,N_member);
             M(sym_M(1,:)) = M_upper;
@@ -258,7 +257,6 @@ while iter<maxiter % main optimization loop starts here
         % Ri=zeros(1,N_member); % Radii of gyration of sections, presetting
         [A(Avar_ind),~,~]=round_A_W(A(Avar_ind),M(Avar_ind),section_no,0.5*ones(1,numel(Avar_ind))); % Stochastically round the continuous size values to the closest upper/lower value in the available set of sections   
         A(sym_A(2:end,:))= repmat(A(sym_A(1,:)),size(sym_A,1)-1,1); % Assign the size values of dependent members
-        %  Ri(sym_A(2:end,:))= repmat(Ri(sym_A(1,:)),size(sym_A,1)-1,1); %Assign the radius of gyration of dependent memebrs
        % find out which members and shape variables are active in the sampled design   (independent and dependent)       
         A_active_ind=find(M); % active members 
         A_passive_ind=setdiff(1:N_member,A_active_ind);  % passive members (independent and dependent)
@@ -283,7 +281,6 @@ while iter<maxiter % main optimization loop starts here
         Y(k,N_Xvar+N_Avar+1:end)=M(Mvar_ind);
         Z(k,:)=(Y(k,:)-YMEAN)/S(k); % perturbation vector 
         %  analyze the design 
-        %[Length_M,Vol,displ_ratio,slender_ratio,stress_ratio,f_int_ext,displacement,f_int_unit]= FE_solve_2D3D_ASD(NAP,X,DOF_constrained,A,Ri,M,GSCP,Fext,M_elasticity,Fy,dis_all,Max_Kcond,D); 
         [Length_M,Vol,displ_ratio,buck_ratio,   stress_ratio,f_int_ext,displacement,f_int_unit]=FE_solve_2D3D_simp(NAP,X,DOF_constrained,A,   M,GSCP,Fext,M_elasticity,SigT_all,SigC_all,dis_all,Max_Kcond,D); 
         counteval=counteval+1; 
         %  assign the highest constraint violation to all the coupled variables
@@ -294,7 +291,6 @@ while iter<maxiter % main optimization loop starts here
         Agoal0=A;
         Agoal2=Agoal0.*max(1,max([stress_ratio;buck_ratio])); % Agoal2>=Agoal0    
         Agoal2=round_A_W(Agoal2,M,section_no,ones(1,N_member));
-        %Agoal2=find_Agoal_ASD(Length_M,f_int_ext,M,A,Ri,Fy,M_elasticity,section_no,sym_A,Avar_ind); % individual section area increase for satisfaction of member-based constraints 
         Agoal3=Agoal0.*max(displ_ratio); % proportional increase for satisfaction of displacement constriants
         Agoal= max([Agoal0+(Agoal2-Agoal0).*Pcoeff;Agoal3]); % The estimated required increase + the initial cross section area
         f(k)=Density*(  Vol+sum((Agoal-A).*M.*Length_M)   ); % the value of the objective function (penalized weight)
@@ -313,12 +309,10 @@ while iter<maxiter % main optimization loop starts here
             Z(k+lambda,:)= Z(k,:);
             constraint_vio(k+lambda,:)= constraint_vio(k,:);
         else % the k-th design was kinematically stable, perform resizing
-            %[A_resized,Ri_resized]=resize_FSDII_ASD(Length_M,dis_all,f_int_ext,displacement,                        M,A,Ri,Fy,M_elasticity,Pcoeff,Max_Avar,section_no,sym_A,Avar_ind,f_int_unit,opt.ucr_red);  % returns the resized section
             A_resized=           resize_FSDII_simp(Length_M,dis_all,buck_ratio,stress_ratio,f_int_ext,displacement,M,A,      M_elasticity,Pcoeff,Max_Avar,section_no,sym_A,Avar_ind,f_int_unit,opt.ucr_red);
             Y(k+lambda,N_Xvar+1:N_Xvar+N_Avar)=A_resized(Avar_ind); % Update the resized solution
             Z(k+lambda,:)=(Y(k+lambda,:)-YMEAN)/S(k+lambda);   % Update the corresponding perturbation vector 
             % now analyze the resized solution
-            %[Length_M,Vol,displ_ratio,slender_ratio,stress_ratio,f_int_ext,displacement,f_int_unit]=FE_solve_2D3D_ASD(NAP,X,DOF_constrained,A_resized,Ri_resized,M,GSCP,Fext,M_elasticity,Fy,dis_all,Max_Kcond,D); 
             [Length_M,Vol,displ_ratio,buck_ratio,   stress_ratio,f_int_ext,displacement,f_int_unit]=FE_solve_2D3D_simp(NAP,X,DOF_constrained,A_resized,M,GSCP,Fext,M_elasticity,SigT_all,SigC_all,dis_all,Max_Kcond,D); 
             counteval=counteval+1;
             % assign the most critical constraint to all coupled sections    

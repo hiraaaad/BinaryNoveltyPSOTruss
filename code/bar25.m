@@ -1,9 +1,4 @@
 function [best_feas_design,final_eval,total_eval] = bar25(M_upper)
-
-% Please study the readme.pdf file before using this code. 
-% This file optimizes the 224-bar pyramid problem.
-% AISC-ASD (9-th edition) specifications govern the constraints.
-
 % ********** Control parameters of FSD-ES II (Default values) *************
 opt.initial_M=1; % initial values for recombinant design for topology variables
 opt.topology_efficiency_check=0; % check the necessary condition for efficiency of the sampled topology (deactivated)
@@ -19,18 +14,11 @@ opt.feastol=1e-7; % tolerance for constraint violation
 opt.stopping_interval = 10;
 
 % ********************* Enter problem specific data here % **********************
-% RandSeedNo=randi([1,100000],1,100000);
-% RandSeedNo = RandSeedNo(1) % random seed number
-
-% RandSeedNo = 14541;
 D=3; %planar or spatial trusss
 N_node=10; % number of nodes in the ground structure
 N_member=25; % number of nodes in the ground structure
 GSCP = [1 1 2 1 2 2 2 1 1 3 4 3 5 3  6 4 5 3 4 6 5  3 4 5 6
         2 4 3 5 6 4 5 3 6 6 5 4 6 10 7 9 8 8 7 9 10 7 8 9 10]';
-          
-% a matrix determining the connectivity plot in the ground structure (N_member rows, 2 columns)
-%define grouped members in a matrix
 
 sym_M = [1 1 1 1;2 3 4 5;6 7 8 9;10 11 11 11;12 13 13 13;14 15 16 17;18 19 20 21;22 23 24 25]';
 
@@ -44,7 +32,6 @@ L = 25;
 
 X_const_val=[-37.5,0,200,37.5,0,200,-37.5,37.5,100,37.5,37.5,100,...
 37.5,-37.5,100,-37.5,-37.5,100,-100,100,0,100,100,0,100,-100,0,-100,-100,0];
-
 % values of the fixed coordinates % values of the fixed coordinates
 DOF_constrained=[19:1:30]; % DOFs anchored by the supports
 % Define external load(s) applied to the structure
@@ -53,7 +40,6 @@ Fext=zeros(load_cases,3*N_node)';
 
 Fext([1:1:9],1)= [1 -10 -10 0 -10 -10 0.5 0 0];
 Fext([16:1:18],1)= [0.6 0 0];
-
 
 %Define Mechanical Properties
 M_elasticity=10000;  %modulus of elasticity
@@ -66,16 +52,9 @@ dis_all=0.35; % allowable displacement along each DOF. If there is no displaceme
 section_no=25; % The avilable section list for this problem. (see sections.m)
 Min_A=0.1;
 Max_A=3.4;
-% Specify the search range of shape variables. Only those corresponding the independent shape variables are important
-% D_X=[-180	0	10	0	-180	0	10	0	-180	75	10	75	-180	150	10	150	-180	225	10	225	-90	300	10	300	-90	350	10	350	-90	400	10	400	-90	450	10	450	-90	500	10	500	-90	570	90	570	-150	600	150	600	-150	550	10	550	-90	550	10	550	0	550];
-% U_X=[-10	0	180	0	-10	150	180	150	-10	225	180	225	-10	300	180	300	-10	375	180	375	-10	400	90	400	-10	450	90	450	-10	500	90	500	-10	550	90	550	-10	600	90	600	-90	570	90	570	-150	600	150	600	-10	650	150	650	-10	650	90	650	0	650];
+
 D_X = X_const_val;
 U_X = X_const_val;
-% ********** Upper Level ***********
-% ********** Upper Level ***********
-% XXX = [1 0 1 1 0 0 1 1 1 0];
-% *************************************************************************
-
 % ********** No more modifications are required  from this line ***********
 % generating required data
 % SF_buck=pi^2/kappa; 
@@ -97,8 +76,6 @@ if opt.topology_efficiency_check==1
 end
 
 %Initial valuess of design variables
-% Xmean=(D_X+U_X)/2; For now, no shape analysis
-% Xmean(X_const_ind)=X_const_val;
 Mmean=opt.initial_M*ones(1,N_member); % topology
 Amean=(Max_A+Min_A)/2*ones(1,N_member); % cross-section areas
 % Find independent variables. Consider only variables that are independent
@@ -107,15 +84,9 @@ Avar_ind=setdiff(1:N_member,reshape(sym_A(2:end,:),1,numel(sym_A(2:end,:))));
 Avar_ind=union(Avar_ind,sym_A(1,:)); 
 Mvar_ind=setdiff(1:N_member,[basic_member,reshape(sym_A,1,numel(sym_A))]);
 Mvar_ind=union(Mvar_ind,setdiff(sym_A(1,:),basic_member)); % independent topology variables
-% N_Xvar=numel(Xvar_ind); % Number of independent shape variables
 N_Avar=numel(Avar_ind); % Number of independent size variables
 N_Mvar=numel(Mvar_ind); 
-% Number of independent topology variables
-% YMEAN=([ Xmean(Xvar_ind) Amean(Avar_ind) Mmean(Mvar_ind)]); %Y is the set of all independent variables
 YMEAN=([Amean(Avar_ind) Mmean(Mvar_ind)]);
-% U_Y=[U_X(Xvar_ind) Max_A*ones(1,N_Avar) ones(1,N_Mvar)]; 
-% D_Y=[D_X(Xvar_ind) Min_A*ones(1,N_Avar) zeros(1,N_Mvar)];
-
 U_Y=[Max_A*ones(1,N_Avar) ones(1,N_Mvar)]; 
 D_Y=[Min_A*ones(1,N_Avar) zeros(1,N_Mvar)];
 
@@ -132,19 +103,11 @@ N_DefC=(N_node*D-numel(DOF_constrained))*(dis_all<1e10);
 N_constraint_all=(sqrt(N_DefC)+sqrt(N_member))^2*sqrt(N_loadcase);
 N_var_eff=(N_var_all)* sqrt(1+N_constraint_all/N_var_all); %efective number of variables
 % Setting lambda, mu, maxiter
-
 lambda=round(opt.lambda_coeff*sqrt(N_var_eff)); 
-
-% lambda=10;
-
 maxiter=round(opt.maxiter_coeff*sqrt(N_var_eff));
-
-% maxiter = 100;
-
 mu=max(round((lambda*opt.mulambdaratio)),1); 
 Tc=(1+opt.Tccoeff*N_var_eff*(N_var_eff+1)/mu)^(-1);   % learning rate of STR
 Ts=1/sqrt(2*opt.Tscoeff*N_var_eff);   % learning rate of the global step size
-
 weights=log(1+mu)-log(1:mu);
 weights=weights/sum(weights); % weights for the recombination of the selected parents
 % Initial values 
@@ -165,7 +128,6 @@ Max_Avar=Max_Max_Avar; % move limit ratio
 minPcoeff=1;  % minimum value of penalty coefficients
 infeas_ratio=opt.max_infeas*ones(1,N_member); % maximum fraction of members that may violate a constraint
 counteval=0; % evaluation count
-
 
 stopping = false;
 stopping_record = [];
@@ -208,8 +170,6 @@ while iter<maxiter % main optimization loop starts here
                 stable=1; % The candidate design is accepted if it satisfies all the necessary conditions for stability
             end
         end % The k-th solution that satisfies the necessary conditions for stability is generated
-%         X(Xvar_ind)=Y(k,1:N_Xvar); % shape of the design
-%         X=enforce_shape_sym(X,N_member,opt);% Enforce shape symmetry, if any
         M = zeros(1,25); %upper level
         M(sym_M(1,:)) = M_upper;
         M(sym_M(2:end,:))= repmat(M(sym_M(1,:)),size(sym_M,1)-1,1);
@@ -217,10 +177,8 @@ while iter<maxiter % main optimization loop starts here
          NAP=find_NAP(GSCP,M);
 
         A(Avar_ind)=Y(k,N_Xvar+1:N_Xvar+N_Avar); % size values
-        % Ri=zeros(1,N_member); % Radii of gyration of sections, presetting
         [A(Avar_ind),~,~]=round_A_W(A(Avar_ind),M(Avar_ind),section_no,0.5*ones(1,numel(Avar_ind))); % Stochastically round the continuous size values to the closest upper/lower value in the available set of sections   
         A(sym_A(2:end,:))= repmat(A(sym_A(1,:)),size(sym_A,1)-1,1); % Assign the size values of dependent members
-        %  Ri(sym_A(2:end,:))= repmat(Ri(sym_A(1,:)),size(sym_A,1)-1,1); %Assign the radius of gyration of dependent memebrs
        % find out which members and shape variables are active in the sampled design   (independent and dependent)       
         A_active_ind=find(M); % active members 
         A_passive_ind=setdiff(1:N_member,A_active_ind);  % passive members (independent and dependent)
@@ -240,7 +198,6 @@ while iter<maxiter % main optimization loop starts here
         Y_W(k,:)=Y(k,:)*0;
         Y_W(k,Y_active_ind)=1; % store which variables in the k-th solution were active (required for excluding the effect of the passive variables in recombination)
         %   Now update the the k-th solution
-%         Y(k,1:N_Xvar)=X(Xvar_ind);
         Y(k,N_Xvar+1:N_Xvar+N_Avar)=A(Avar_ind);
         Y(k,N_Xvar+N_Avar+1:end)=M(Mvar_ind);
         Z(k,:)=(Y(k,:)-YMEAN)/S(k); % perturbation vector 
@@ -280,12 +237,10 @@ while iter<maxiter % main optimization loop starts here
             Z(k+lambda,:)= Z(k,:);
             constraint_vio(k+lambda,:)= constraint_vio(k,:);
         else % the k-th design was kinematically stable, perform resizing
-            %[A_resized,Ri_resized]=resize_FSDII_ASD(Length_M,dis_all,f_int_ext,displacement,                        M,A,Ri,Fy,M_elasticity,Pcoeff,Max_Avar,section_no,sym_A,Avar_ind,f_int_unit,opt.ucr_red);  % returns the resized section
             A_resized=           resize_FSDII_simp(Length_M,dis_all,buck_ratio,stress_ratio,f_int_ext,displacement,M,A,      M_elasticity,Pcoeff,Max_Avar,section_no,sym_A,Avar_ind,f_int_unit,opt.ucr_red);
             Y(k+lambda,N_Xvar+1:N_Xvar+N_Avar)=A_resized(Avar_ind); % Update the resized solution
             Z(k+lambda,:)=(Y(k+lambda,:)-YMEAN)/S(k+lambda);   % Update the corresponding perturbation vector 
             % now analyze the resized solution
-            %[Length_M,Vol,displ_ratio,slender_ratio,stress_ratio,f_int_ext,displacement,f_int_unit]=FE_solve_2D3D_ASD(NAP,X,DOF_constrained,A_resized,Ri_resized,M,GSCP,Fext,M_elasticity,Fy,dis_all,Max_Kcond,D); 
             [Length_M,Vol,displ_ratio,buck_ratio,   stress_ratio,f_int_ext,displacement,f_int_unit]=FE_solve_2D3D_simp(NAP,X,DOF_constrained,A_resized,M,GSCP,Fext,M_elasticity,SigT_all,SigC_all,dis_all,Max_Kcond,D); 
             counteval=counteval+1;
             % assign the most critical constraint to all coupled sections    

@@ -1,8 +1,4 @@
 function [best_feas_design,final_eval,total_eval] = bar15(M_upper)
-% This file optimizes the 15-bar truss problem.
-% clc
-% clear
-%
 kk = 1;
 D=2; %plannar or spatial
 voroodi=[
@@ -72,7 +68,6 @@ if opt.topology_efficiency_check==1
      DOFonNAP=DOFonNAP+max(reshape(F0,D,N_node))-1;
 end
 %Initial valuess of design variables
-
 % Find independent variables. Consider only variables that are independent
 Xvar_ind=setdiff(X_indep_ind, X_const_ind); 
 Avar_ind=setdiff(1:N_member,reshape(sym_A(2:end,:),1,numel(sym_A(2:end,:))));
@@ -108,22 +103,8 @@ else
 end
 minPcoeff=1;  % minimum value of penalty coefficients
 infeas_ratio=opt.max_infeas*ones(1,N_member); % maximum fraction of members that may violate a constraint
-% filename2=['bar' num2str(N_member) '_hist' num2str(kk) '.csv']; % output file for the history of optimization process
-% filename3=['bar' num2str(N_member) '_fin' num2str(kk) '.csv']; % output file for the best detected feasible solution
-% filename4=['bar' num2str(N_member) '_bestfeas' num2str(kk) '.csv']; % output file for the best detected feasible solution
-% 
-% % datafile=['ResumeData' num2str(kk) '.mat'];
-% 
-% datafile=['ResumeData' num2str(5000) '.mat'];
-
-% if exist(datafile)
-%     load(datafile);
-% else
     Xmean=(D_X+U_X)/2;
     Xmean(X_const_ind)=X_const_val;
-%     Mmean=opt.initial_M*ones(1,N_member); 
-%     Mmean=opt.initial_M*ones(1,N_member); % topology
-
         %%% UPPER LEVEL %%%%
         Mmean = M_upper;
     
@@ -166,12 +147,7 @@ javab(1,:)=nindep;
 for k=nindep
     p=setdiff(zind,k)
     for m=p
-      % [ Xmean(3*k-2)==(Xmean(3*m-2)) k  Xmean(3*k-1)  (31-Xmean(3*m-1))]
         if (Xmean(3*k-2)==(Xmean(3*m-2)) & Xmean(3*k-1)==(31-Xmean(3*m-1)))  |   (Xmean(3*k-2)==(38-Xmean(3*m-2)) & Xmean(3*k-1)==(31-Xmean(3*m-1)))  |   (Xmean(3*k-2)==(38-Xmean(3*m-2)) & Xmean(3*k-1)==(Xmean(3*m-1)))
-            
-            
-            
-            
             ind=find(javab(1,:)==k);
             bood=sum(javab(:,ind)>0);
             javab(bood+1,ind)=m;
@@ -183,19 +159,12 @@ javab
  
    
 end
-
-
-
 stopping = false;
 stopping_record = [];
 stopping_evals = [];
 
 while counteval<maxeval && stopping == false % main optimization loop starts here
-    iter=iter+1; old_counteval=counteval;
-    
-    % presetting values for speed boost
- 
-
+    iter=iter+1; old_counteval=counteval; 
     if opt.resizeStrategy==2
         keep_M=zeros(2*lambda,N_member);
         Y=zeros(2*lambda,numel(STR)); 
@@ -222,7 +191,6 @@ while counteval<maxeval && stopping == false % main optimization loop starts her
         
         A(Avar_ind)=Y(k,N_Xvar+1:N_Xvar+N_Avar); % size values
         Ri=zeros(1,N_member); % Radii of gyration of sections, presetting
-        %[A(Avar_ind),Ri(Avar_ind),~]=round_A_W(A(Avar_ind),M(Avar_ind),section_no,0.5*ones(1,numel(Avar_ind))); % Stochastically round the continuous size values to the closest upper/lower value in the available set of sections   
         [A(Avar_ind),Ri(Avar_ind),~]=round_A_W(A(Avar_ind),M(Avar_ind),section_no,(1-0.5*exp(1-Pcoeff(Avar_ind).^opt.BiasIniAroundTavan)).*ones(1,N_Avar)); % Stochastically round the continuous size values to the closest upper/lower value in the available set of sections   
         A(sym_A(2:end,:))= repmat(A(sym_A(1,:)),size(sym_A,1)-1,1); % Assign the size values of dependent members
         Ri(sym_A(2:end,:))= repmat(Ri(sym_A(1,:)),size(sym_A,1)-1,1); %Assign the radius of gyration of dependent memebrs
@@ -250,8 +218,6 @@ while counteval<maxeval && stopping == false % main optimization loop starts her
         Y_active_ind=[ q1 q2+N_Xvar  (1:N_Mvar)+N_Xvar+N_Avar]; % index of active variables in the k-th solution (Y(k,:))
         Y_W(k,:)=Y(k,:)*0;
         Y_W(k,Y_active_ind)=1; % store which variables in the k-th solution were active (required for excluding the effect of the passive variables in recombination)
-        %   Now update the the k-th solution
-
         resized_iter=0;
         suggMax_Avar(k)=Max_Avar;
        
@@ -520,16 +486,8 @@ while counteval<maxeval && stopping == false % main optimization loop starts her
     if ~(opt.TToplearn==1)
         STR_update1(ind4)=STR(ind4).^2+Tc*(suggD(ind4)-randomD(ind4)); % update rule for scaling factors of topology variables
     end
-    %STR_update1(N_Xvar+N_Avar+(1:N_Mvar))=STR(N_Xvar+N_Avar+(1:N_Mvar)).^2+opt.TToplearn*Tc*(suggD(N_Xvar+N_Avar+(1:N_Mvar))-randomD(N_Xvar+N_Avar+(1:N_Mvar)));
     STR_update2=(1-Tc*weights*(Y_W(ind(1:mu),:).^2)).*STR.^2+Tc*suggD; % update rule for scaling factors of shape and size variables
-    
-
-
-
-    %STR(1:N_Xvar+N_Avar)=STR_update2(1:N_Xvar+N_Avar);
-
-    %STR(1+N_Xvar+N_Avar:end)=STR_update1(1+N_Xvar+N_Avar:end); % updated scaling factors
-    if opt.updateSTR(1)==1
+       if opt.updateSTR(1)==1
         STR(1:N_Xvar)=STR_update1(1:N_Xvar);
     end
     if opt.updateSTR(2)==1
@@ -590,7 +548,6 @@ while counteval<maxeval && stopping == false % main optimization loop starts her
         Tc=(1+opt.Tccoeff*N_var_eff/mueff)^(-1);   % learning rate of STR
         Ts=1/sqrt(2*opt.Tscoeff*N_var_eff);   % learning rate of the global step size 
     end
-     %opt.incAmeanCoeff=inf deaactivate the following update
      zarib5=(infeas_ratio(Avar_ind)-opt.max_infeas)*(Ts^opt.incAmeanTsTavan);
      zarib5=max(0,zarib5);
      Amean(Avar_ind)=Amean(Avar_ind).*exp(zarib5);
@@ -629,7 +586,7 @@ while counteval<maxeval && stopping == false % main optimization loop starts her
  end
  
  
-end %run completed
+end
 
 bestX=best_feas_design(1:D*N_node);
 bestA=best_feas_design(D*N_node+(1:N_member));

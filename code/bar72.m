@@ -1,8 +1,4 @@
 function [best_feas_design,final_eval,total_eval] = bar72(M_upper)
-% This file optimizes the 10-bar truss problem.
-% clc
-% clear
-%
 opt.ProblemName='72barDiscrete';
 kk = 1;
 D=3; %plannar or spatial
@@ -108,21 +104,9 @@ else
 end
 minPcoeff=1;  % minimum value of penalty coefficients
 infeas_ratio=opt.max_infeas*ones(1,N_member); % maximum fraction of members that may violate a constraint
-% filename2=['bar' num2str(N_member) '_hist' num2str(kk) '.csv']; % output file for the history of optimization process
-% filename3=['bar' num2str(N_member) '_fin' num2str(kk) '.csv']; % output file for the best detected feasible solution
-% filename4=['bar' num2str(N_member) '_bestfeas' num2str(kk) '.csv']; % output file for the best detected feasible solution
-% 
-% % datafile=['ResumeData' num2str(kk) '.mat'];
-% 
-% datafile=['ResumeData' num2str(5000) '.mat'];
 
-% if exist(datafile)
-%     load(datafile);
-% else
     Xmean=(D_X+U_X)/2;
     Xmean(X_const_ind)=X_const_val;
-%     Mmean=opt.initial_M*ones(1,N_member); 
-%     Mmean=opt.initial_M*ones(1,N_member); % topology
 
         %%% UPPER LEVEL %%%%
     if strcmp(opt.ProblemName,'39barDiscrete')
@@ -173,7 +157,6 @@ javab(1,:)=nindep;
 for k=nindep
     p=setdiff(zind,k)
     for m=p
-      % [ Xmean(3*k-2)==(Xmean(3*m-2)) k  Xmean(3*k-1)  (31-Xmean(3*m-1))]
         if (Xmean(3*k-2)==(Xmean(3*m-2)) & Xmean(3*k-1)==(31-Xmean(3*m-1)))  |   (Xmean(3*k-2)==(38-Xmean(3*m-2)) & Xmean(3*k-1)==(31-Xmean(3*m-1)))  |   (Xmean(3*k-2)==(38-Xmean(3*m-2)) & Xmean(3*k-1)==(Xmean(3*m-1)))
             
             
@@ -270,12 +253,9 @@ while counteval<maxeval && stopping == false % main optimization loop starts her
  
              end
         end % The k-th solution that satisfies the necessary conditions for stability is generated
-        %X(Xvar_ind)=Y(k,1:N_Xvar); % shape of the design
-        %X=enforce_shape_sym(X,N_member);% Enforce shape symmetry, if any
-        
+       
         A(Avar_ind)=Y(k,N_Xvar+1:N_Xvar+N_Avar); % size values
         Ri=zeros(1,N_member); % Radii of gyration of sections, presetting
-        %[A(Avar_ind),Ri(Avar_ind),~]=round_A_W(A(Avar_ind),M(Avar_ind),section_no,0.5*ones(1,numel(Avar_ind))); % Stochastically round the continuous size values to the closest upper/lower value in the available set of sections   
         [A(Avar_ind),Ri(Avar_ind),~]=round_A_W(A(Avar_ind),M(Avar_ind),section_no,(1-0.5*exp(1-Pcoeff(Avar_ind).^opt.BiasIniAroundTavan)).*ones(1,N_Avar)); % Stochastically round the continuous size values to the closest upper/lower value in the available set of sections   
         A(sym_A(2:end,:))= repmat(A(sym_A(1,:)),size(sym_A,1)-1,1); % Assign the size values of dependent members
         Ri(sym_A(2:end,:))= repmat(Ri(sym_A(1,:)),size(sym_A,1)-1,1); %Assign the radius of gyration of dependent memebrs
@@ -522,7 +502,6 @@ while counteval<maxeval && stopping == false % main optimization loop starts her
                      if strcmp(opt.specification,'AISC-ASD')
                          f_int_ext_increased=f_int_ext;%f_int_ext.*repmat(max(1,stress_ratio.^(opt.tavanAgoal+Pcoeff.^opt.TavanApplyPcoeffInAgoal-1)),N_loadcase,1)';
                          Agoal2=find_Agoal_ASD(Length_M,f_int_ext_increased,M,Agoal0,Rigoal0,Fy,M_elasticity,section_no,sym_A,Avar_ind,opt); % individual section area increase for satisfaction of member-based constraints 
-                         %Agoal2=find_Agoal_ASD2(Length_M,f_int_ext_increased,M,Agoal0,Rigoal0,Fy,M_elasticity,section_no,sym_A,Avar_ind,max([slender_ratio;stress_ratio]),opt); % individual section area increase for satisfaction of member-based constraints 
   
                      elseif strcmp(opt.specification,'simplified')
                          Agoal2=Agoal0.*max(1,max([stress_ratio;slender_ratio])); % Agoal2>=Agoal0    
@@ -543,9 +522,8 @@ while counteval<maxeval && stopping == false % main optimization loop starts her
                      keep_best=[keep_best; [counteval best_feas_design(end)]];
                  end
 
-            % estimate the required increase in cross sections such that all constraints are satisfied
              end % resizing completed
-    end %  lambda+lambda solutions were created and evaluated
+    end
     % Now perform recombination and update strategy parameters
     if opt.resizeStrategy==2
         resize_eff=mean(sign(1-f(lambda+1:2*lambda) ./f(1:lambda))); %  resizing efficiency
@@ -694,7 +672,5 @@ bestM=best_feas_design(D*N_node+N_member+(1:N_member));
 bestNAP=find_NAP(GSCP,bestM);
 final_eval = stopping_evals(1);
 total_eval = counteval;
-% plot_truss(GSCP,bestX,bestNAP,bestM,bestA,D);
-
 end
 
